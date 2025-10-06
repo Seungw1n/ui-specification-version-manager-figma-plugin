@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "fileName": "6sprt. 관리자 정책",
+    "pageName": "Flow 관리 - 구매한 Flow 목록",
+    "categoryNumber": "02-04-00",
+    "version": "v1.4.5",
+    "createdAt": "2025-09-08T06:42:33.527Z",
+    "updatedAt": "2025-09-08T06:42:33.527Z",
+    "sourceWireframes": [
+      "02-04-00_wireframe_v1.4.5.json"
+    ]
+  },
+  "screens": {
+    "02-04-00_description_v1.4.5": {
+      "title": "Flow - 구매한 Flow 목록 화면",
+      "outline": "채널에서 **구매한 모든 Flow** 목록을 조회하는 화면.\n- LNB의 'Flow' 메뉴 또는 탭 메뉴의 **'구매한 Flow' 탭**을 통해 진입.\n- 목록은 **페이지네이션**으로 표시.",
+      "elements": {
+        "1": {
+          "content": "[1. 구매한 Flow 검색 기능]\n- **검색 조건**: Flow **제목**으로 검색\n- **실행**: Enter 키 또는 검색 버튼 클릭 시 검색어에 해당하는 Flow 목록 조회"
+        },
+        "2": {
+          "content": "[2. 구매한 Flow 목록 테이블]\n- **정렬 기준**: **'구매일시' 최근순** 정렬\n- **테이블 표시 정보**:\n  - Flow 제목\n  - 소유 채널\n  - 구매자 ID\n  - 구매일시\n  - 최근 수정일시\n- **상세 진입**: Flow 항목 클릭 시, 해당 Flow의 상세 화면(`02-04-02`)으로 이동"
+        }
+      }
+    }
+  }
+}

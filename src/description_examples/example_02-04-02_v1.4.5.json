@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "fileName": "6sprt. 관리자 정책",
+    "pageName": "Flow 관리 - 구매한 Flow 상세",
+    "categoryNumber": "02-04-02",
+    "version": "v1.4.5",
+    "createdAt": "2025-09-08T06:42:33.527Z",
+    "updatedAt": "2025-09-08T06:42:33.527Z",
+    "sourceWireframes": [
+      "02-04-02_wireframe_v1.4.5.json"
+    ]
+  },
+  "screens": {
+    "02-04-02_description_v1.4.5": {
+      "title": "구매한 Flow 상세 화면",
+      "outline": "구매한 Flow 목록에서 선택한 특정 Flow의 상세 정보를 조회하는 화면.\n- 관리자는 Flow 정보를 **입력/수정하지 않고 조회만** 할 수 있다.",
+      "elements": {
+        "1": {
+          "content": "[1. Flow 정보]\n- 구매한 Flow의 상세 정보 표시\n- **관리자 권한**: Flow 정보를 입력/수정하지 않고 **조회만** 가능\n- **정보 항목**:\n  - Flow 제목\n  - Flow 설명\n  - 구매자 ID\n  - 구매자 닉네임\n  - 구매일시"
+        }
+      }
+    }
+  }
+}

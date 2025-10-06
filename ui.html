@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>UI Description Plugin</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    /* 기본 스타일 */
+    body {
+      font: 16px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial;
+      margin: 0;
+      padding: 16px;
+      background: #ffffff;
+      color: #1e1e1e;
+    }
+
+    h3 {
+      margin: 0 0 20px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e1e1e;
+    }
+
+    /* 버튼 스타일 */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      margin-bottom: 8px;
+      transition: opacity 0.2s ease;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn:active {
+      opacity: 0.8;
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #2c2c2c;
+      border: 1px solid #d0d0d0;
+    }
+
+    .btn-primary {
+      background: #2c2c2c;
+      color: white;
+    }
+
+    /* 입력 영역 스타일 */
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #1e1e1e;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .textarea {
+      width: 100%;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 11px;
+      resize: none;
+      box-sizing: border-box;
+    }
+
+    .textarea-readonly {
+      background: #f9f9f9;
+      color: #666666;
+      height: 120px;
+    }
+
+    .textarea-input {
+      color: #1e1e1e;
+      height: 200px;
+    }
+
+    /* 구분선 */
+    .divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 20px 0;
+    }
+
+    /* 토스트 스타일은 JavaScript에서 인라인으로 처리 */
+  </style>
+</head>
+
+<body>
+  <h3>화면 설계서 버전 관리</h3>
+  
+  <!-- 와이어프레임 추출 섹션 -->
+  <div>
+    <button id="read-selected" class="btn btn-secondary">
+      선택한 와이어프레임 구조 저장
+    </button>
+    <button id="read-wireframes" class="btn btn-secondary">
+      모든 와이어프레임 구조 저장
+    </button>
+  </div>
+  
+  <div class="divider"></div>
+  
+  <!-- 구조 미리보기 -->
+  <div class="input-group">
+    <label class="label">추출된 구조 (미리보기):</label>
+    <textarea id="structure" class="textarea textarea-readonly" readonly 
+              placeholder="와이어프레임 구조가 여기에 표시됩니다..."></textarea>
+  </div>
+  
+  <!-- Description JSON 입력 -->
+  <div class="input-group">
+    <label class="label">Description JSON 붙여넣기:</label>
+    <textarea id="input" class="textarea textarea-input" 
+              placeholder='{"metadata": {...}, "screens": {...}} 형식의 JSON을 붙여넣어 주세요.'></textarea>
+  </div>
+  
+  <!-- 적용 버튼 -->
+  <div>
+    <button id="apply" class="btn btn-primary">
+      Description 일괄 적용하기
+    </button>
+  </div>
+
+  <script>
+    // 전역 변수
+    let selectedFolderHandle = null;
+
+    // 토스트 메시지 표시
+    function showToast(message, type = 'error') {
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? '#00c851' : '#ff5555';
+      
+      toast.style.cssText = `
+        position: fixed;
+        top: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${bgColor};
+        color: white;
+        padding: 12px 16px;
+        border-radius: 6px;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-size: 12px;
+        font-weight: 500;
+        max-width: 320px;
+        text-align: center;
+        word-break: keep-all;
+      `;
+      
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 4000);
+    }
+
+    // 이벤트 핸들러 등록
+    document.getElementById('read-selected').onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'check-selection' } }, '*');
+    };
+
+    document.getElementById('read-wireframes').onclick = () => {
+      selectedFolderHandle = { isBatch: true, name: 'wireframes' };
+      parent.postMessage({ pluginMessage: { type: 'read-wireframes' } }, '*');
+    };
+
+    document.getElementById('apply').onclick = () => {
+      const inputValue = document.getElementById('input').value.trim();
+      
+      if (!inputValue) {
+        showToast('Description JSON을 입력해주세요.', 'error');
+        return;
+      }
+      
+      try {
+        const descriptionData = JSON.parse(inputValue);
+        parent.postMessage({ pluginMessage: { type: 'apply', descriptionData } }, '*');
+      } catch (e) {
+        showToast(`JSON 파싱 오류: ${e.message}`, 'error');
+      }
+    };
+
+    // Figma 플러그인 메시지 처리
+    window.onmessage = async (event) => {
+      const { type, data, hasSelection } = event.data.pluginMessage || {};
+      
+      switch (type) {
+        case 'selection-checked':
+          if (hasSelection) {
+            selectedFolderHandle = { isDownload: true, name: 'wireframes' };
+            parent.postMessage({ pluginMessage: { type: 'read-selected' } }, '*');
+          } else {
+            showToast('프레임을 선택해주세요!', 'error');
+          }
+          break;
+          
+        case 'save-structure':
+          const folderName = selectedFolderHandle ? selectedFolderHandle.name : 'wireframes';
+          await handleFileSave(data, folderName);
+          document.getElementById('structure').value = JSON.stringify(data, null, 2);
+          break;
+      }
+    };
+
+    // 파일 저장 처리
+    async function handleFileSave(data, folderPath) {
+      if (data.screens.length === 1) {
+        // 단일 파일 다운로드
+        const screen = data.screens[0];
+        const structureContent = createStructureContent(data, screen);
+        const fileName = `${screen.name}.json`;
+        
+        downloadFile(fileName, JSON.stringify(structureContent, null, 2));
+        showToast(`파일 다운로드 완료: ${fileName}`, 'success');
+        
+      } else {
+        // ZIP 파일로 다운로드
+        await downloadAsZip(data);
+      }
+    }
+
+    // 구조 컨텐츠 생성
+    function createStructureContent(data, screen) {
+      return {
+        fileName: data.fileName,
+        pageName: data.pageName,
+        frameName: screen.name,
+        timestamp: data.timestamp,
+        structure: screen
+      };
+    }
+
+    // ZIP 파일 다운로드
+    async function downloadAsZip(data) {
+      try {
+        const zip = new JSZip();
+        
+        data.screens.forEach(screen => {
+          const structureContent = createStructureContent(data, screen);
+          const fileName = `${screen.name}.json`;
+          zip.file(fileName, JSON.stringify(structureContent, null, 2));
+        });
+        
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        // 버전 정보 추출 (프레임명에서 vn.n.n 패턴 찾기)
+        const extractVersion = () => {
+          if (data.screens && data.screens.length > 0) {
+            for (const screen of data.screens) {
+              const versionMatch = screen.name.match(/v\d+\.\d+\.\d+/i);
+              if (versionMatch) {
+                return versionMatch[0];
+              }
+            }
+          }
+          return 'v1.0.0'; // 기본값
+        };
+
+        const version = extractVersion();
+        const zipFileName = `wireframe_${version}.zip`;
+        
+        downloadFile(zipFileName, zipBlob);
+        showToast(`ZIP 파일 다운로드 완료: ${zipFileName}`, 'success');
+        
+      } catch (error) {
+        console.error('ZIP 생성 실패:', error);
+        showToast('ZIP 생성 실패, 개별 파일로 다운로드합니다.', 'error');
+        
+        // 개별 파일 다운로드로 fallback
+        data.screens.forEach((screen, index) => {
+          const structureContent = createStructureContent(data, screen);
+          const fileName = `${screen.name}.json`;
+          
+          setTimeout(() => {
+            downloadFile(fileName, JSON.stringify(structureContent, null, 2));
+          }, index * 300);
+        });
+      }
+    }
+
+    // 파일 다운로드 함수
+    function downloadFile(fileName, content) {
+      const blob = content instanceof Blob ? content : new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
